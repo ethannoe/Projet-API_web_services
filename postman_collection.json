@@ -1,0 +1,1516 @@
+{
+  "info": {
+    "_postman_id": "b4c4c1f3-7a7f-4c51-9ac0-8fbd2c9b1b01",
+    "name": "My Social Networks - Tests API",
+    "description": "Collection de tests complète pour l’API My Social Networks.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00 - Santé / Infos",
+      "description": "Vérifications de disponibilité et initialisation des variables.",
+      "item": [
+        {
+          "name": "00.1 - Santé API",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            },
+            "description": "Vérifie que l’API répond et initialise les données de test."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const horodatage = Date.now();",
+                  "pm.environment.set('userAEmail', `usera_${horodatage}@mail.com`);",
+                  "pm.environment.set('userBEmail', `userb_${horodatage}@mail.com`);",
+                  "pm.environment.set('userAPassword', 'MotDePasse!123');",
+                  "pm.environment.set('userBPassword', 'MotDePasse!123');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Réponse standardisée', () => {",
+                  "  pm.expect(json).to.have.property('succes');",
+                  "  pm.expect(json).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 - Authentification",
+      "description": "Inscription, connexion et récupération du profil.",
+      "item": [
+        {
+          "name": "01.1 - Inscription utilisateur A",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prenom\": \"Alice\",\n  \"nom\": \"Martin\",\n  \"email\": \"{{userAEmail}}\",\n  \"motDePasse\": \"{{userAPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Crée l’utilisateur A et récupère le jeton."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Utilisateur A créé', () => pm.expect(json.succes).to.eql(true));",
+                  "pm.environment.set('userAId', json.donnees.utilisateur.id);",
+                  "pm.environment.set('tokenAdmin', json.donnees.jeton);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.2 - Connexion utilisateur A",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userAEmail}}\",\n  \"motDePasse\": \"{{userAPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Connexion utilisateur A."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.environment.set('tokenAdmin', json.donnees.jeton);",
+                  "pm.test('Jeton A présent', () => pm.expect(json.donnees.jeton).to.exist);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.3 - Inscription utilisateur B",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prenom\": \"Bob\",\n  \"nom\": \"Durand\",\n  \"email\": \"{{userBEmail}}\",\n  \"motDePasse\": \"{{userBPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Crée l’utilisateur B et récupère le jeton."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.environment.set('userBId', json.donnees.utilisateur.id);",
+                  "pm.environment.set('tokenUser', json.donnees.jeton);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.4 - Connexion utilisateur B",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userBEmail}}\",\n  \"motDePasse\": \"{{userBPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Connexion utilisateur B."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.environment.set('tokenUser', json.donnees.jeton);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.5 - Profil utilisateur A",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            },
+            "description": "Récupère le profil de l’utilisateur A."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Profil récupéré', () => pm.expect(json.donnees.email).to.eql(pm.environment.get('userAEmail')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.N1 - Email déjà utilisé (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prenom\": \"Alice\",\n  \"nom\": \"Martin\",\n  \"email\": \"{{userAEmail}}\",\n  \"motDePasse\": \"{{userAPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Tentative de réinscription avec le même email."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 409', () => pm.response.to.have.status(409));",
+                  "const json = pm.response.json();",
+                  "pm.test('Conflit détecté', () => pm.expect(json.succes).to.eql(false));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.N2 - Profil sans jeton (401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            },
+            "description": "Accès au profil sans authentification."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 - Utilisateurs",
+      "description": "Vérifications liées au profil utilisateur.",
+      "item": [
+        {
+          "name": "02.1 - Profil utilisateur B",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenUser}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            },
+            "description": "Récupère le profil de l’utilisateur B."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Email cohérent', () => pm.expect(json.donnees.email).to.eql(pm.environment.get('userBEmail')));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 - Groupes",
+      "description": "Création, adhésion et gestion des groupes.",
+      "item": [
+        {
+          "name": "03.1 - Création groupe public",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Fans d’API\",\n  \"description\": \"Groupe public pour les passionnés d’API.\",\n  \"icone\": \"https://exemple.com/icone.png\",\n  \"photoCouverture\": \"https://exemple.com/couverture.png\",\n  \"type\": \"public\",\n  \"autoriserPublicationMembres\": true,\n  \"autoriserCreationEvenementsMembres\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/groupes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "groupes"]
+            },
+            "description": "Crée un groupe public et récupère l’identifiant."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.environment.set('groupId', json.donnees._id);",
+                  "pm.environment.set('threadGroupId', json.donnees.filDiscussion);",
+                  "pm.test('Groupe créé', () => pm.expect(json.donnees.nom).to.exist);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.2 - Rejoindre groupe public",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenUser}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/groupes/{{groupId}}/rejoindre",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "groupes", "{{groupId}}", "rejoindre"]
+            },
+            "description": "L’utilisateur B rejoint le groupe public."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Adhésion confirmée', () => pm.expect(json.succes).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.N1 - Accès groupe sans jeton (401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/groupes/{{groupId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "groupes", "{{groupId}}"]
+            },
+            "description": "Lecture d’un groupe sans authentification."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.N2 - Validation par non admin (403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenUser}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/groupes/{{groupId}}/valider/{{userAId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "groupes", "{{groupId}}", "valider", "{{userAId}}"]
+            },
+            "description": "Tentative de validation de membre sans être admin."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.N3 - Groupe inexistant (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/groupes/000000000000000000000000",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "groupes", "000000000000000000000000"]
+            },
+            "description": "Lecture d’un groupe inexistant."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.N4 - Validation Joi (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"\",\n  \"description\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/groupes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "groupes"]
+            },
+            "description": "Validation Joi sur la création de groupe."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 - Événements",
+      "description": "Création d’événements, participants et organisateurs.",
+      "item": [
+        {
+          "name": "04.1 - Création événement public",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Sommet API 2026\",\n  \"description\": \"Rencontre des architectes backend.\",\n  \"dateDebut\": \"2026-06-01T10:00:00.000Z\",\n  \"dateFin\": \"2026-06-01T18:00:00.000Z\",\n  \"lieu\": \"Lyon\",\n  \"photoCouverture\": \"https://exemple.com/evenement.png\",\n  \"visibilite\": \"public\",\n  \"options\": {\n    \"billetterieActivee\": true,\n    \"shoppingList\": true,\n    \"covoiturage\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/evenements",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "evenements"]
+            },
+            "description": "Crée un événement public avec options bonus."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.environment.set('eventId', json.donnees._id);",
+                  "pm.test('Événement créé', () => pm.expect(json.donnees.nom).to.exist);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04.1bis - Création événement public secondaire",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Atelier secondaire\",\n  \"description\": \"Événement public pour tests de droits.\",\n  \"dateDebut\": \"2026-06-03T09:00:00.000Z\",\n  \"dateFin\": \"2026-06-03T12:00:00.000Z\",\n  \"lieu\": \"Marseille\",\n  \"photoCouverture\": \"https://exemple.com/evenement2.png\",\n  \"visibilite\": \"public\",\n  \"options\": {\n    \"billetterieActivee\": true,\n    \"shoppingList\": false,\n    \"covoiturage\": false\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/evenements",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "evenements"]
+            },
+            "description": "Crée un événement public secondaire pour les tests de droits."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('eventNoRightsId', pm.response.json().donnees._id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04.2 - Ajout participant",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenUser}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/evenements/{{eventId}}/participants",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "evenements", "{{eventId}}", "participants"]
+            },
+            "description": "Ajoute l’utilisateur B comme participant."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Participant ajouté', () => pm.expect(json.succes).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04.N1 - Ajouter organisateur sans droits (403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenUser}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/evenements/{{eventId}}/organisateurs/{{userAId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "evenements", "{{eventId}}", "organisateurs", "{{userAId}}"]
+            },
+            "description": "Tentative d’ajout d’organisateur par un non-organisateur."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04.3 - Ajouter organisateur",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/evenements/{{eventId}}/organisateurs/{{userBId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "evenements", "{{eventId}}", "organisateurs", "{{userBId}}"]
+            },
+            "description": "Ajoute l’utilisateur B en tant qu’organisateur."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Organisateur ajouté', () => pm.response.json().succes === true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04.4 - Création événement privé pour test",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Réunion privée\",\n  \"description\": \"Événement privé interne.\",\n  \"dateDebut\": \"2026-06-02T10:00:00.000Z\",\n  \"dateFin\": \"2026-06-02T12:00:00.000Z\",\n  \"lieu\": \"Paris\",\n  \"photoCouverture\": \"https://exemple.com/prive.png\",\n  \"visibilite\": \"prive\",\n  \"options\": {\n    \"billetterieActivee\": false,\n    \"shoppingList\": false,\n    \"covoiturage\": false\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/evenements",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "evenements"]
+            },
+            "description": "Crée un événement privé pour tests négatifs."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('eventPrivateId', pm.response.json().donnees._id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04.N2 - Événement inexistant (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/evenements/000000000000000000000000",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "evenements", "000000000000000000000000"]
+            },
+            "description": "Lecture d’un événement inexistant."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04.N3 - Validation Joi (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"\",\n  \"description\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/evenements",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "evenements"]
+            },
+            "description": "Validation Joi pour création d’événement."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 - Fils & Messages",
+      "description": "Création de fils de discussion et messages.",
+      "item": [
+        {
+          "name": "05.1 - Créer fil événement",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"evenement\",\n  \"evenement\": \"{{eventId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fils",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fils"]
+            },
+            "description": "Crée un fil de discussion pour l’événement public."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('threadEventId', pm.response.json().donnees._id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05.2 - Ajouter message",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contenu\": \"Bienvenue à tous sur ce fil !\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fils/{{threadEventId}}/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fils", "{{threadEventId}}", "messages"]
+            },
+            "description": "Ajoute un message sur le fil de l’événement."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Message créé', () => pm.response.json().donnees.contenu);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05.3 - Lister messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenUser}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fils/{{threadEventId}}/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fils", "{{threadEventId}}", "messages"]
+            },
+            "description": "Liste les messages du fil événement."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Liste de messages', () => Array.isArray(pm.response.json().donnees));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05.N1 - Message sans jeton (401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contenu\": \"Message interdit\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fils/{{threadEventId}}/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fils", "{{threadEventId}}", "messages"]
+            },
+            "description": "Tentative d’ajout de message sans authentification."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05.N2 - Accès fil privé sans participant (403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"evenement\",\n  \"evenement\": \"{{eventPrivateId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fils",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fils"]
+            },
+            "description": "Crée un fil pour l’événement privé."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set('threadPrivateId', pm.response.json().donnees._id);",
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05.N3 - Lecture fil privé par non participant (403)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenUser}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fils/{{threadPrivateId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fils", "{{threadPrivateId}}"]
+            },
+            "description": "Tentative d’accès à un fil d’événement privé sans participant."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 - Albums / Photos / Commentaires",
+      "description": "Création d’albums, photos et commentaires.",
+      "item": [
+        {
+          "name": "06.1 - Créer album",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"evenement\": \"{{eventId}}\",\n  \"nom\": \"Album officiel\",\n  \"description\": \"Souvenirs de l’événement.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/albums",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "albums"]
+            },
+            "description": "Crée un album photo pour l’événement."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('albumId', pm.response.json().donnees._id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06.2 - Ajouter photo",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://exemple.com/photo.png\",\n  \"description\": \"Photo principale\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/albums/{{albumId}}/photos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "albums", "{{albumId}}", "photos"]
+            },
+            "description": "Ajoute une photo à l’album."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('photoId', pm.response.json().donnees._id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06.3 - Commenter photo",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenUser}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contenu\": \"Super souvenir !\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/photos/{{photoId}}/commentaires",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "photos", "{{photoId}}", "commentaires"]
+            },
+            "description": "Ajoute un commentaire sur la photo."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06.4 - Lister commentaires",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenUser}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/photos/{{photoId}}/commentaires",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "photos", "{{photoId}}", "commentaires"]
+            },
+            "description": "Liste les commentaires de la photo."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06.N1 - Photo sans jeton (401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://exemple.com/interdit.png\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/albums/{{albumId}}/photos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "albums", "{{albumId}}", "photos"]
+            },
+            "description": "Tentative d’ajout de photo sans authentification."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07 - Sondages",
+      "description": "Création de sondages et réponses.",
+      "item": [
+        {
+          "name": "07.1 - Créer sondage",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"evenement\": \"{{eventId}}\",\n  \"questions\": [\n    {\n      \"question\": \"Quel format préférez-vous ?\",\n      \"options\": [\"Atelier\", \"Conférence\", \"Table ronde\"]\n    },\n    {\n      \"question\": \"Quel créneau vous convient ?\",\n      \"options\": [\"Matin\", \"Après-midi\"]\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sondages",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sondages"]
+            },
+            "description": "Crée un sondage pour l’événement."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('pollId', pm.response.json().donnees._id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07.2 - Répondre sondage",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenUser}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reponses\": [\n    {\n      \"questionIndex\": 0,\n      \"optionChoisie\": \"Atelier\"\n    },\n    {\n      \"questionIndex\": 1,\n      \"optionChoisie\": \"Matin\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sondages/{{pollId}}/reponses",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sondages", "{{pollId}}", "reponses"]
+            },
+            "description": "Réponse de l’utilisateur B au sondage."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07.N1 - Création sondage sans droits (403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenUser}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"evenement\": \"{{eventNoRightsId}}\",\n  \"questions\": [\n    {\n      \"question\": \"Test interdit\",\n      \"options\": [\"A\", \"B\"]\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sondages",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sondages"]
+            },
+            "description": "Tentative de création de sondage par non-organisateur."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07.N2 - Validation Joi (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"evenement\": \"{{eventId}}\",\n  \"question\": \"\",\n  \"options\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sondages",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sondages"]
+            },
+            "description": "Validation Joi sur création de sondage."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "08 - Billetterie",
+      "description": "Création de types de billets et achats.",
+      "item": [
+        {
+          "name": "08.1 - Créer type de billet",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"evenement\": \"{{eventId}}\",\n  \"nom\": \"Billet Standard\",\n  \"prix\": 25,\n  \"stock\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/billetterie/types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "billetterie", "types"]
+            },
+            "description": "Crée un type de billet pour l’événement public."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('ticketTypeId', pm.response.json().donnees._id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08.2 - Lister types de billets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/billetterie/evenements/{{eventId}}/types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "billetterie", "evenements", "{{eventId}}", "types"]
+            },
+            "description": "Liste les types de billets disponibles."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Liste de billets', () => Array.isArray(pm.response.json().donnees));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08.3 - Achat billet",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"billetType\": \"{{ticketTypeId}}\",\n  \"prenom\": \"Nadia\",\n  \"nom\": \"Lefèvre\",\n  \"adresse\": \"12 rue des Lilas, 75010 Paris\",\n  \"email\": \"nadia.lefevre@mail.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/billetterie/acheter",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "billetterie", "acheter"]
+            },
+            "description": "Achat d’un billet public."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('purchaseId', pm.response.json().donnees._id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08.N1 - Création billet sans droits (403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenUser}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"evenement\": \"{{eventNoRightsId}}\",\n  \"nom\": \"Billet Interdit\",\n  \"prix\": 10,\n  \"stock\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/billetterie/types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "billetterie", "types"]
+            },
+            "description": "Tentative de création de billet sans droit organisateur."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08.N2 - Achat billet dupliqué (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"billetType\": \"{{ticketTypeId}}\",\n  \"prenom\": \"Nadia\",\n  \"nom\": \"Lefèvre\",\n  \"adresse\": \"12 rue des Lilas, 75010 Paris\",\n  \"email\": \"nadia.lefevre@mail.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/billetterie/acheter",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "billetterie", "acheter"]
+            },
+            "description": "Tentative de deuxième achat avec le même email."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 409', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "09 - Bonus",
+      "description": "Validation des options bonus exposées dans l’événement.",
+      "item": [
+        {
+          "name": "09.1 - Vérifier options bonus",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/evenements/{{eventId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "evenements", "{{eventId}}"]
+            },
+            "description": "Vérifie la présence des options shopping list et covoiturage."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "const options = pm.response.json().donnees.options;",
+                  "pm.test('Options bonus présentes', () => {",
+                  "  pm.expect(options).to.have.property('shoppingList');",
+                  "  pm.expect(options).to.have.property('covoiturage');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+        ,
+        {
+          "name": "09.2 - Ajouter article shopping list",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Boissons\",\n  \"quantite\": 10\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bonus/evenements/{{eventId}}/shopping",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bonus", "evenements", "{{eventId}}", "shopping"]
+            },
+            "description": "Ajoute un article à la shopping list."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('shoppingItemId', pm.response.json().donnees._id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09.3 - Lister shopping list",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/bonus/evenements/{{eventId}}/shopping",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bonus", "evenements", "{{eventId}}", "shopping"]
+            },
+            "description": "Récupère les articles de la shopping list."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Liste shopping', () => Array.isArray(pm.response.json().donnees));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09.4 - Créer covoiturage",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pointDepart\": \"Gare de Lyon\",\n  \"placesTotal\": 3,\n  \"commentaire\": \"Départ à 18h\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bonus/evenements/{{eventId}}/covoiturage",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bonus", "evenements", "{{eventId}}", "covoiturage"]
+            },
+            "description": "Crée un covoiturage pour l’événement."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('carpoolId', pm.response.json().donnees._id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09.5 - Lister covoiturages",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/bonus/evenements/{{eventId}}/covoiturage",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bonus", "evenements", "{{eventId}}", "covoiturage"]
+            },
+            "description": "Récupère les covoiturages de l’événement."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Liste covoiturages', () => Array.isArray(pm.response.json().donnees));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
